@@ -20,7 +20,7 @@ Usage: endlessh [-vhs] [-d MS] [-f CONFIG] [-l LEN] [-m LIMIT] [-p PORT]
   -4        Bind to IPv4 only
   -6        Bind to IPv6 only
   -d INT    Message millisecond delay [10000]
-  -f        Set and load config file [/etc/endlessh/config]
+  -f        Set and load config file [/usr/local/etc/endlessh/config]
   -h        Print this help message and exit
   -l INT    Maximum banner line length (3-255) [32]
   -m INT    Maximum number of clients [4096]

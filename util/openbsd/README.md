@@ -6,13 +6,13 @@ If you want to cover both IPv4 and IPv6 you'll need to run *two* instances of
 `endlessh` due to OpenBSD limitations. Here's how I did it:
 
 - copy the `endlessh` script to `rc.d` twice, as `endlessh` and `endlessh6`
-- copy the `config` file to `/etc/endlessh` twice, as `config` and `config6`
+- copy the `config` file to `/usr/local/etc/endlessh/config` twice, as `config` and `config6`
   - use `BindFamily 4` in `config`
   - use `BindFamily 6` in `config6`
 - in `rc.conf.local` force `endlessh6` to load `config6` like so:
 
 ```
-endlessh6_flags=-s -f /etc/endlessh/config6
+endlessh6_flags=-s -f /usr/local/etc/endlessh/config6
 endlessh_flags=-s
 ```
 

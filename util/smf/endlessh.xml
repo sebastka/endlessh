@@ -48,7 +48,7 @@
                 grouping='require_all'
                 restart_on='refresh'
                 type='path'>
-                <service_fmri value='file://localhost/usr/local/etc/endlessh.conf' />
+                <service_fmri value='file://localhost/usr/local/etc/endlessh/config.conf' />
         </dependency>
 
         <exec_method

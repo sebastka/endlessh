@@ -44,7 +44,7 @@ Message milliseconds delay. Default: 10000
 Set and load config file.
 By default
 .Nm
-looks for /etc/endlessh/config.
+looks for /usr/local/etc/endlessh/config.
 .It Fl h
 Print the help message and exit.
 .It Fl l Ar max banner length
@@ -76,8 +76,8 @@ A SIGHUP signal requests a reload of its configuration file.
 .Pp
 A SIGUSR1 signal will print connections stats to the log.
 .Sh FILES
-.Bl -tag -width /etc/endlessh/config -compact
-.It Pa /etc/endlessh/config
+.Bl -tag -width /usr/local/etc/endlessh/config -compact
+.It Pa /usr/local/etc/endlessh/config
 The default
 .Nm
 configuration file.
