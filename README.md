@@ -25,6 +25,7 @@ Usage: endlessh [-vhs] [-d MS] [-f CONFIG] [-l LEN] [-m LIMIT] [-p PORT]
   -l INT    Maximum banner line length (3-255) [32]
   -m INT    Maximum number of clients [4096]
   -p INT    Listening port [2222]
+  -p STRING Listening interface [lo0]
   -s        Print diagnostics to syslog instead of standard output
   -v        Print diagnostics (repeatable)
 ```
@@ -54,6 +55,9 @@ The configuration file has similar syntax to OpenSSH.
 ```
 # The port on which to listen for new SSH connections.
 Port 2222
+
+# The interface on which to listen for new SSH connections.
+Interface lo0
 
 # The endless banner is sent one line at a time. This is the delay
 # in milliseconds between individual lines.
