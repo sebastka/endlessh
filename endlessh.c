@@ -576,7 +576,7 @@ server_create(int port, char *interface, int family)
         logmsg(log_debug, "errno = %d, %s", errno, strerror(errno));
 
     /* Bind to interface */
-    r = setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, interface, sizeof(c->interface));
+    r = setsockopt(s, SOL_SOCKET, SO_BINDTODEVICE, interface, sizeof(interface));
     logmsg(log_debug, "setsockopt(%d, SO_BINDTODEVICE, %s) = %d", s, interface, r);
     if (r == -1)
         logmsg(log_debug, "errno = %d, %s", errno, strerror(errno));
