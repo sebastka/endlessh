@@ -2,11 +2,8 @@
  *
  * This is free and unencumbered software released into the public domain.
  */
-#if defined(__OpenBSD__)
-#  define _BSD_SOURCE  /* for pledge(2) and unveil(2) */
-#else
-#  define _XOPEN_SOURCE 600
-#endif
+
+#define _BSD_SOURCE  /* for pledge(2) and unveil(2) */
 
 #include <time.h>
 #include <errno.h>
@@ -33,11 +30,8 @@
 #define DEFAULT_MAX_LINE_LENGTH     32
 #define DEFAULT_MAX_CLIENTS       4096
 
-#if defined(__FreeBSD__)
-#  define DEFAULT_CONFIG_FILE "/usr/local/etc/endlessh.config"
-#else
-#  define DEFAULT_CONFIG_FILE "/etc/endlessh/config"
-#endif
+
+#define DEFAULT_CONFIG_FILE "/etc/endlessh/config"
 
 #define DEFAULT_BIND_FAMILY  AF_UNSPEC
 
@@ -562,7 +556,6 @@ server_create(int port, int family)
      * is read-only (not modifiable).
      * http://man.openbsd.org/ip6#IPV6_V6ONLY
      */
-#ifndef __OpenBSD__
     if (family == AF_INET6 || family == AF_UNSPEC) {
         errno = 0;
         value = (family == AF_INET6);
@@ -571,7 +564,6 @@ server_create(int port, int family)
         if (r == -1)
             logmsg(log_debug, "errno = %d, %s", errno, strerror(errno));
     }
-#endif
 
     if (family == AF_INET) {
         struct sockaddr_in addr4 = {
@@ -632,11 +624,9 @@ main(int argc, char **argv)
     struct config config = CONFIG_DEFAULT;
     const char *config_file = DEFAULT_CONFIG_FILE;
 
-#if defined(__OpenBSD__)
     unveil(config_file, "r"); /* return ignored as the file may not exist */
     if (pledge("inet stdio rpath unveil", 0) == -1)
         die();
-#endif
 
     config_load(&config, config_file, 1);
 
@@ -655,11 +645,9 @@ main(int argc, char **argv)
             case 'f':
                 config_file = optarg;
 
-#if defined(__OpenBSD__)
                 unveil(config_file, "r");
                 if (unveil(0, 0) == -1)
                     die();
-#endif
 
                 config_load(&config, optarg, 1);
                 break;
