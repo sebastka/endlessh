@@ -31,7 +31,7 @@
 #define DEFAULT_MAX_CLIENTS       4096
 
 
-#define DEFAULT_CONFIG_FILE "/etc/endlessh/config"
+#define DEFAULT_CONFIG_FILE "/usr/local/etc/endlessh/config"
 
 #define DEFAULT_BIND_FAMILY  AF_UNSPEC
 

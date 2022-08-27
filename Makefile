@@ -16,9 +16,11 @@ install: endlessh
 	install -m 755 endlessh $(DESTDIR)$(PREFIX)/bin/
 	install -d $(DESTDIR)$(PREFIX)/man/man1
 	install -m 644 endlessh.1 $(DESTDIR)$(PREFIX)/man/man1/
+	install -d $(PREFIX)/etc/endlessh
+	install -m 644 util/smf/endlessh.conf $(PREFIX)/etc/endlessh
 
 uninstall:
-	rm -rf $(DESTDIR)$(PREFIX)/bin/endlessh $(DESTDIR)$(PREFIX)/man/man1/endlessh.1
+	rm -rf $(DESTDIR)$(PREFIX)/bin/endlessh $(DESTDIR)$(PREFIX)/man/man1/endlessh.1 $(PREFIX)/etc/endlessh
 
 clean:
 	rm -rf endlessh
