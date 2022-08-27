@@ -23,17 +23,19 @@
 #include <netinet/in.h>
 #include <syslog.h>
 
-#define ENDLESSH_VERSION           1.1
+#define ENDLESSH_VERSION                            1.1
 
-#define DEFAULT_PORT              2222
-#define DEFAULT_DELAY            10000  /* milliseconds */
-#define DEFAULT_MAX_LINE_LENGTH     32
-#define DEFAULT_MAX_CLIENTS       4096
-
+#define DEFAULT_PORT                               2222
+#define DEFAULT_IP4                         "127.0.0.1"
+#define DEFAULT_DELAY                             10000  /* milliseconds */
+#define DEFAULT_MAX_LINE_LENGTH                      32
+#define DEFAULT_MAX_CLIENTS                        4096
 
 #define DEFAULT_CONFIG_FILE "/usr/local/etc/endlessh/config"
 
 #define DEFAULT_BIND_FAMILY  AF_UNSPEC
+
+#define IP4_MAX_SIZE 16
 
 #define XSTR(s) STR(s)
 #define STR(s) #s
@@ -291,6 +293,7 @@ sigusr1_handler(int signal)
 
 struct config {
     int port;
+    char ip4[IP4_MAX_SIZE];
     int delay;
     int max_line_length;
     int max_clients;
@@ -299,6 +302,7 @@ struct config {
 
 #define CONFIG_DEFAULT { \
     .port            = DEFAULT_PORT, \
+    .ip4             = DEFAULT_IP4, \
     .delay           = DEFAULT_DELAY, \
     .max_line_length = DEFAULT_MAX_LINE_LENGTH, \
     .max_clients     = DEFAULT_MAX_CLIENTS, \
@@ -317,6 +321,19 @@ config_set_port(struct config *c, const char *s, int hardfail)
             exit(EXIT_FAILURE);
     } else {
         c->port = tmp;
+    }
+}
+
+static void
+config_set_ip4(struct config *c, const char *s, int hardfail)
+{
+    size_t len = strlen(s);
+    strncpy(c->ip4, s, len);
+
+    if (len > IP4_MAX_SIZE-1 || c->ip4[len] != '\0') {
+        fprintf(stderr, "endlessh: Invalid IPv4 address: %s\n", s);
+        if (hardfail)
+            exit(EXIT_FAILURE);
     }
 }
 
@@ -389,6 +406,7 @@ config_set_bind_family(struct config *c, const char *s, int hardfail)
 enum config_key {
     KEY_INVALID,
     KEY_PORT,
+    KEY_IP4,
     KEY_DELAY,
     KEY_MAX_LINE_LENGTH,
     KEY_MAX_CLIENTS,
@@ -401,6 +419,7 @@ config_key_parse(const char *tok)
 {
     static const char *const table[] = {
         [KEY_PORT]            = "Port",
+        [KEY_IP4]             = "IP4",
         [KEY_DELAY]           = "Delay",
         [KEY_MAX_LINE_LENGTH] = "MaxLineLength",
         [KEY_MAX_CLIENTS]     = "MaxClients",
@@ -463,6 +482,9 @@ config_load(struct config *c, const char *file, int hardfail)
                 case KEY_PORT:
                     config_set_port(c, tokens[1], hardfail);
                     break;
+                case KEY_IP4:
+                    config_set_ip4(c, tokens[1], hardfail);
+                    break;
                 case KEY_DELAY:
                     config_set_delay(c, tokens[1], hardfail);
                     break;
@@ -498,6 +520,7 @@ static void
 config_log(const struct config *c)
 {
     logmsg(log_info, "Port %d", c->port);
+    logmsg(log_info, "IP4 %s", c->ip4);
     logmsg(log_info, "Delay %d", c->delay);
     logmsg(log_info, "MaxLineLength %d", c->max_line_length);
     logmsg(log_info, "MaxClients %d", c->max_clients);
@@ -511,7 +534,7 @@ static void
 usage(FILE *f)
 {
     fprintf(f, "Usage: endlessh [-vh] [-46] [-d MS] [-f CONFIG] [-l LEN] "
-                               "[-m LIMIT] [-p PORT]\n");
+                               "[-m LIMIT] [-p PORT] [-x IP4]\n");
     fprintf(f, "  -4        Bind to IPv4 only\n");
     fprintf(f, "  -6        Bind to IPv6 only\n");
     fprintf(f, "  -d INT    Message millisecond delay ["
@@ -524,6 +547,7 @@ usage(FILE *f)
     fprintf(f, "  -m INT    Maximum number of clients ["
             XSTR(DEFAULT_MAX_CLIENTS) "]\n");
     fprintf(f, "  -p INT    Listening port [" XSTR(DEFAULT_PORT) "]\n");
+    fprintf(f, "  -x STRING Listening IPv4 address [" XSTR(DEFAULT_IP4) "]\n");
     fprintf(f, "  -v        Print diagnostics to standard output "
             "(repeatable)\n");
     fprintf(f, "  -V        Print version information and exit\n");
@@ -536,7 +560,7 @@ print_version(void)
 }
 
 static int
-server_create(int port, int family)
+server_create(int port, char *ip4, int family)
 {
     int r, s, value;
 
@@ -569,7 +593,7 @@ server_create(int port, int family)
         struct sockaddr_in addr4 = {
             .sin_family = AF_INET,
             .sin_port = htons(port),
-            .sin_addr = {INADDR_ANY}
+            .sin_addr = {inet_addr(ip4)}
         };
         r = bind(s, (void *)&addr4, sizeof(addr4));
     } else {
@@ -580,7 +604,7 @@ server_create(int port, int family)
         };
         r = bind(s, (void *)&addr6, sizeof(addr6));
     }
-    logmsg(log_debug, "bind(%d, port=%d) = %d", s, port, r);
+    logmsg(log_debug, "bind(%d, port=%d, ip4=%s) = %d", s, port, ip4, r);
     if (r == -1) die();
 
     r = listen(s, INT_MAX);
@@ -631,7 +655,7 @@ main(int argc, char **argv)
     config_load(&config, config_file, 1);
 
     int option;
-    while ((option = getopt(argc, argv, "46d:f:hl:m:p:svV")) != -1) {
+    while ((option = getopt(argc, argv, "46d:f:hl:m:p:x:svV")) != -1) {
         switch (option) {
             case '4':
                 config_set_bind_family(&config, "4", 1);
@@ -663,6 +687,9 @@ main(int argc, char **argv)
                 break;
             case 'p':
                 config_set_port(&config, optarg, 1);
+                break;
+            case 'x':
+                config_set_ip4(&config, optarg, 1);
                 break;
             case 's':
                 logmsg = logsyslog;
@@ -725,18 +752,19 @@ main(int argc, char **argv)
 
     unsigned long rng = epochms();
 
-    int server = server_create(config.port, config.bind_family);
+    int server = server_create(config.port, config.ip4, config.bind_family);
 
     while (running) {
         if (reload) {
             /* Configuration reload requested (SIGHUP) */
             int oldport = config.port;
+            char *oldip4 = config.ip4;
             int oldfamily = config.bind_family;
             config_load(&config, config_file, 0);
             config_log(&config);
-            if (oldport != config.port || oldfamily != config.bind_family) {
+            if (oldport != config.port || strncmp(oldip4, config.ip4, strlen(oldip4)+1) != 0 || oldfamily != config.bind_family) {
                 close(server);
-                server = server_create(config.port, config.bind_family);
+                server = server_create(config.port, config.ip4, config.bind_family);
             }
             reload = 0;
         }
