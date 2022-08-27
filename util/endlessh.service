@@ -25,7 +25,7 @@ ProtectHome=true
 InaccessiblePaths=/run /var
 
 ## If you want Endlessh to bind on ports < 1024
-## 1) run: 
+## 1) run:
 ##     setcap 'cap_net_bind_service=+ep' /usr/local/bin/endlessh
 ## 2) uncomment following line
 #AmbientCapabilities=CAP_NET_BIND_SERVICE
